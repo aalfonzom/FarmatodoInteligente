@@ -7,8 +7,8 @@ import psycopg2 as psy
 
 
 def createMacAddress():    
-    macaddress  = random.randrange(100000000000,999999999999)
-    return macaddress
+    macAddress  = random.randrange(100000000000,999999999999)
+    return macAddress
 
 def createGender():
     list  = [1,0]
@@ -36,7 +36,7 @@ def hasPhone():
     else:
         return '0'
 
-def getClients(id, gender, age):
+def getClients(id, gender, age, macAddress):
     try:  # creo la conexion
         conn = psy.connect(
             user="postgres",
@@ -56,8 +56,8 @@ def getClients(id, gender, age):
 
         else:  # Logica de si no existe
             insert = "INSERT into person (idperson, gender, age, phone) VALUES ({},'{}',{},{})".format(
-                id, gender, age, macaddress)
-            cursor.execute(insert, (id, gender, age, macaddress))
+                id, gender, age, macAddress)
+            cursor.execute(insert, (id, gender, age, macAddress))
             conn.commit()
 
     except (Exception, psy.Error) as error:
@@ -73,7 +73,8 @@ def main(cliente, camara):
         gender = createGender()
         age = createAge()
         id = createId()
-        getClients(cliente, gender, age)
+        macAddress = createMacAddress()
+        getClients(cliente, gender, age, macAddress)
 
 # Defino variables
 client = mqtt.Client("Cliente")
@@ -135,7 +136,7 @@ while(exitFlag == False):
     camara = 0
     topic = "Farmatodo/Camara" + "/{}".format(camara)
     farmacia:int = random.randint(1,3)
-    cliente: int = random.randint(1, 4)
+    cliente: int = random.randint(1, 1000000)
     payload = "El Cliente {} ha entrado a la Farmacia {}".format(cliente, farmacia)
     client.publish(topic, payload, QOS, retain)
     main(cliente, camara)     
