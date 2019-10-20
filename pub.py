@@ -34,7 +34,7 @@ def hasPhone():
     else:
         return '0'
 
-def getClients(id, gender, age):
+def getClients(id, gender, age, macAddress):
     try:  # creo la conexion
         conn = psy.connect(
             user="postgres",
@@ -45,7 +45,7 @@ def getClients(id, gender, age):
         )
         cursor = conn.cursor()
         # Realizo el query
-        query = "SELECT id_Persona FROM Persona WHERE id_Persona = {}".format(id)
+        query = "SELECT idperson FROM person WHERE idperson = {}".format(id)
         cursor.execute(query)
         row = cursor.fetchone()
 
@@ -53,7 +53,7 @@ def getClients(id, gender, age):
             print("ya existe")
 
         else:  # Logica de si no existe
-            insert = "INSERT into Persona (id_persona, sexo, edad, telefono) VALUES ({},'{}',{},{})".format(
+            insert = "INSERT into person (idperson, gender, age, phone) VALUES ({},'{}',{},{})".format(
                 id, gender, age, macAddress)
             cursor.execute(insert, (id, gender, age, macAddress))
             conn.commit()
@@ -71,7 +71,8 @@ def main(cliente, camara):
         gender = createGender()
         age = createAge()
         id = createId()
-        getClients(cliente, gender, age)
+        macAddress = createMacAddress()
+        getClients(cliente, gender, age, macAddress)
 
 # Defino variables
 client = mqtt.Client("Cliente")
@@ -133,7 +134,7 @@ while(exitFlag == False):
     camara = 0
     topic = "Farmatodo/Camara" + "/{}".format(camara)
     farmacia:int = random.randint(1,3)
-    cliente: int = random.randint(1, 4)
+    cliente: int = random.randint(1, 1000000)
     payload = "El Cliente {} ha entrado a la Farmacia {}".format(cliente, farmacia)
     client.publish(topic, payload, QOS, retain)
     main(cliente, camara)     
