@@ -8,9 +8,13 @@ def createMacAddress():
     mac_Address  = random.randrange(100000000000,999999999999)
     return mac_Address
 
-def createGenter():
-    list  = [M,F]
+def createGender():
+    list  = [1,0]
     gender = random.choice(list)
+    if(gender == 1):
+        gender = 'M'
+    else :
+        gender = 'F'
     return gender
 
 def createAge():
@@ -30,6 +34,45 @@ def hasPhone():
     else:
         return '0'
 
+def getClients(id, gender, age):
+    try:  # creo la conexion
+        conn = psy.connect(
+            user="postgres",
+            password="admin",
+            host='localhost',
+            port="5432",
+            database="FarmatodoInteligente"
+        )
+        cursor = conn.cursor()
+        # Realizo el query
+        query = "SELECT id_Persona FROM Persona WHERE id_Persona = {}".format(id)
+        cursor.execute(query)
+        row = cursor.fetchone()
+
+        if(row is not None):
+            print("ya existe")
+
+        else:  # Logica de si no existe
+            insert = "INSERT into Persona (id_persona, sexo, edad, telefono) VALUES ({},'{}',{},{})".format(
+                id, gender, age, macAddress)
+            cursor.execute(insert, (id, gender, age, macAddress))
+            conn.commit()
+
+    except (Exception, psy.Error) as error:
+        print("Error", error)
+
+    finally:
+        if(conn):
+            cursor.close()
+            conn.close()
+
+def main(cliente, camara):
+    if(camara == 0):  # el cliente pasa por la puerta principal
+        gender = createGender()
+        age = createAge()
+        id = createId()
+        getClients(cliente, gender, age)
+
 # Defino variables
 client = mqtt.Client("Cliente")
 broker = "localhost"
@@ -43,14 +86,20 @@ def on_publish(client, userdata, mid):
     print("Mensaje Publicado: "+str(mid))
 
 
-# Funcion que se ejecuta cuando ocurre la conexion
-def on_connect(client, userdata, flags, rc):
+#Funcion que se ejecuta cuando ocurre la coneccion
+def on_connect(client,userdata,flags,rc):   
     global exitFlag
-    if(rc == 0):  # si la coneccion es exitosa
-        print("\n------------------------------------------")
+    if(rc == 0): #si la coneccion es exitosa
+        print("\n------------------------------------------")   
         print("El publicador se ha conectado")
-        print("Se ha conectado a la Farmacia. Codigo:"+str(rc))
+        print("Se ha conectado al cliente. Codigo:"+str(rc))
         exitFlag = False
+
+    elif(rc == 5): #Si hay un error en la coneccion
+        print("\n------------------------------------------")   
+        print("Error en la coneccion. Codigo:"+str(rc))
+        client.disconnect()
+        exitFlag = True
 
 
 # Funcion que se ejecuta al desconectarse
@@ -73,16 +122,20 @@ time.sleep(2)
 
 
 # Publico el mensaje
+
 QOS = 2
-retain = False
+retain = True
 
 # Se obtiene y se imprime el mensaje
 while(exitFlag == False):
-    time.sleep(.5)
-    camara: int = random.randint(0, 5)
-    topic = "Farmatodo/Sedes/Camaras" + "/{}".format(camara)
+    time.sleep(3)
+    #camara: int = random.randint(0, 5)
+    camara = 0
+    topic = "Farmatodo/Camara" + "/{}".format(camara)
     farmacia:int = random.randint(1,3)
     cliente: int = random.randint(1, 4)
-    #handleFarmacy(cliente, farmacia, camara)     
+    payload = "El Cliente {} ha entrado a la Farmacia {}".format(cliente, farmacia)
+    client.publish(topic, payload, QOS, retain)
+    main(cliente, camara)     
     print("\n------------------------------------------")
   

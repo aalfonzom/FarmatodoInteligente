@@ -4,8 +4,8 @@ import datetime
 
 client = mqtt.Client()
 broker = "localhost"
-topic = "Farmatodo/Sedes/Camara/#"
-QOS = 0
+topic = "Farmatodo/Camara/#"
+QOS = 2
 date = datetime.datetime.now()
 
 def on_connect(client, userdata, flags, rc):
