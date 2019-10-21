@@ -32,11 +32,11 @@ def createGender():
     return gender
 
 def createCashier():
-    cashier = random.randint(1,100)
+    cashier = random.randint(1,5)
     return cashier
 
 def createHall():
-    hall = random.randint(1,100)
+    hall = random.randint(1,5)
     return hall
 
 def createIdlocation():
@@ -126,10 +126,12 @@ def getLocations(hall,cashier, idlocation):
             conn.close()
 
 def main(cliente, camara):
+    #Sedes Existentes
     hall = createHall()
     cashier = createCashier()
     idlocation = createIdlocation()
     getLocations(hall, cashier, idlocation)
+    
 
     if(camara == 0):  # el cliente pasa por la puerta principal
         gender = createGender()
@@ -194,7 +196,7 @@ retain = True
 # Se obtiene y se imprime el mensaje
 while(exitFlag == False):
     time.sleep(3)
-    #camara: int = random.randint(0, 5)
+    camara: int = random.randint(0, 5)
     camara = 0
     topic = "Farmatodo/Camara" + "/{}".format(camara)
     farmacia:int = random.randint(1,3)
