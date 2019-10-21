@@ -4,6 +4,18 @@ import random
 import datetime
 import psycopg2 as psy
 
+#Metodo para obtener un pasillo aleatorio
+def getHall():
+    hall = random.randint(1,4)
+    return hall
+#Metodo para obtener un cajero aleatorio
+def getCashier():
+    cashier = random.randint(1,4)
+    return cashier
+#Metodo para obtener un id de location aleatorio
+def getIdLocation():
+    idlocation = random.randint(300,1000)
+    return idlocation
 
 
 def createMacAddress():    
@@ -18,6 +30,18 @@ def createGender():
     else :
         gender = 'F'
     return gender
+
+def createCashier():
+    cashier = random.randint(1,100)
+    return cashier
+
+def createHall():
+    hall = random.randint(1,100)
+    return hall
+
+def createIdlocation():
+    idlocation = random.randint(1,100000)
+    return idlocation
 
 def createAge():
     age = random.randint(1,100)
@@ -68,7 +92,45 @@ def getClients(id, gender, age, macAddress):
             cursor.close()
             conn.close()
 
+#Metodo para obtener locations/sedes
+def getLocations(hall,cashier, idlocation):
+    try: #creo conexion con la BDD
+        conn = psy.connect(
+            user="postgres",
+            password="miravila1",
+            host='localhost',
+            port="5432",
+            database="FarmatodoInteligente"
+        )
+        cursor = conn.cursor()
+        #Realizo el query
+        query = "SELECT idlocation FROM location WHERE idlocation = {}".format(idlocation)
+        cursor.execute(query)
+        row = cursor.fetchone()
+
+        if(row is not None):
+            print("ya existe")
+
+        else:  # Logica de si no existe
+            insert = "INSERT into location (hall, cashier, idlocation) VALUES ({},{},{})".format(
+                hall, cashier, idlocation)
+            cursor.execute(insert, (hall, cashier, idlocation))
+            conn.commit()
+
+    except (Exception, psy.Error) as error:
+        print("Error", error)
+
+    finally:
+        if(conn):
+            cursor.close()
+            conn.close()
+
 def main(cliente, camara):
+    hall = createHall()
+    cashier = createCashier()
+    idlocation = createIdlocation()
+    getLocations(hall, cashier, idlocation)
+
     if(camara == 0):  # el cliente pasa por la puerta principal
         gender = createGender()
         age = createAge()
