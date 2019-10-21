@@ -4,19 +4,6 @@ import random
 import datetime
 import psycopg2 as psy
 
-#Metodo para obtener un pasillo aleatorio
-def getHall():
-    hall = random.randint(1,4)
-    return hall
-#Metodo para obtener un cajero aleatorio
-def getCashier():
-    cashier = random.randint(1,4)
-    return cashier
-#Metodo para obtener un id de location aleatorio
-def getIdLocation():
-    idlocation = random.randint(300,1000)
-    return idlocation
-
 
 def createMacAddress():    
     macAddress  = random.randrange(100000000000,999999999999)
@@ -40,12 +27,16 @@ def createHall():
     return hall
 
 def createIdlocation():
-    idlocation = random.randint(1,100000)
+    idlocation = random.randint(1,50)
     return idlocation
 
 def createAge():
     age = random.randint(1,100)
     return age
+
+def getID():
+    return id
+
 
 def createId():
     id = random.randint(1, 1000000)
@@ -93,7 +84,7 @@ def getClients(id, gender, age, macAddress):
             conn.close()
 
 #Metodo para obtener locations/sedes
-def getLocations(hall,cashier, idlocation):
+def getLocations(hall,cashier, idlocation, idperson):
     try: #creo conexion con la BDD
         conn = psy.connect(
             user="postgres",
@@ -109,36 +100,33 @@ def getLocations(hall,cashier, idlocation):
         row = cursor.fetchone()
 
         if(row is not None):
-            print("ya existe")
-
-        else:  # Logica de si no existe
-            insert = "INSERT into location (hall, cashier, idlocation) VALUES ({},{},{})".format(
-                hall, cashier, idlocation)
-            cursor.execute(insert, (hall, cashier, idlocation))
+            insert = "INSERT into location (hall, cashier, idlocation,idperson) VALUES ({},{},{}, {})".format(
+                hall, cashier, idlocation,id)
+            cursor.execute(insert, (hall, cashier, idlocation, id))
             conn.commit()
-
     except (Exception, psy.Error) as error:
         print("Error", error)
 
     finally:
         if(conn):
-            cursor.close()
-            conn.close()
+           cursor.close()
+           conn.close()
+
 
 def main(cliente, camara):
     #Sedes Existentes
     hall = createHall()
     cashier = createCashier()
-    idlocation = createIdlocation()
-    getLocations(hall, cashier, idlocation)
     
-
     if(camara == 0):  # el cliente pasa por la puerta principal
         gender = createGender()
         age = createAge()
         id = createId()
         macAddress = createMacAddress()
         getClients(cliente, gender, age, macAddress)
+    
+    idlocation = createIdlocation()
+    getLocations(hall, cashier, idlocation, id)
 
 # Defino variables
 client = mqtt.Client("Cliente")
@@ -146,32 +134,34 @@ broker = "localhost"
 exitFlag = True
 date = datetime.datetime.now()
 
+
 # Funcion que se ejecuta cuando se publica data.
 def on_publish(client, userdata, mid):
     print("\n------------------------------------------")
     print("Hora del mensaje : "+str(date))
     print("Mensaje Publicado: "+str(mid))
+    
 
 
 #Funcion que se ejecuta cuando ocurre la coneccion
 def on_connect(client,userdata,flags,rc):   
     global exitFlag
-    if(rc == 0): #si la coneccion es exitosa
+    if(rc == 0): #si la conexion es exitosa
         print("\n------------------------------------------")   
         print("El publicador se ha conectado")
         print("Se ha conectado al cliente. Codigo:"+str(rc))
         exitFlag = False
 
-    elif(rc == 5): #Si hay un error en la coneccion
+    elif(rc == 5): #Si hay un error en la conexion
         print("\n------------------------------------------")   
-        print("Error en la coneccion. Codigo:"+str(rc))
+        print("Error en la conexion. Codigo:"+str(rc))
         client.disconnect()
         exitFlag = True
 
 
 # Funcion que se ejecuta al desconectarse
 def on_disconnect(pvtClient, userdata, rc):
-    print("Razon de la desconeccion: " + str(rc))
+    print("Razon de la desconexion: " + str(rc))
     client.disconnect()
 
 
@@ -180,7 +170,7 @@ client.on_publish = on_publish
 client.on_connect = on_connect
 client.on_disconnect = on_disconnect
 
-# Establezco la coneccion
+# Establezco la conexion
 client.connect(broker)
 
 # Empiezo el loop y doy tiempo para la conexion
