@@ -34,6 +34,30 @@ def hasPhone():
     else:
         return '0'
 
+def CreateSede(id):
+    try:
+        conn = psy.connect(
+            user="postgres",
+            password="admin",
+            host='localhost',
+            port="5432",
+            database="FarmatodoInteligente"
+        )
+        cursor = conn.cursor()
+        query = "SELECT idlocation  FROM location WHERE idperson = {}".format(id)
+        cursor.execute(query)
+        data = cursor.fetchone()
+        pharmacy = int(data[0])
+        return pharmacy
+
+    except (Exception, psy.Error) as error:
+        print("Error", error)
+
+    finally:
+        if(conn):
+            cursor.close()
+            conn.close()
+
 def getClients(id, gender, age, macAddress):
     try:  # creo la conexion
         conn = psy.connect(
@@ -66,13 +90,26 @@ def getClients(id, gender, age, macAddress):
             cursor.close()
             conn.close()
 
-def main(cliente, camara):
+def main(cliente, camara, farmacia):
     if(camara == 0):  # el cliente pasa por la puerta principal
         gender = createGender()
         age = createAge()
         id = createId()
         macAddress = createMacAddress()
         getClients(cliente, gender, age, macAddress)
+
+        if(result):
+            salidaFarmacia = CreateSede(cliente)
+            payload = "El cliente {} está saliendo de la farmacia {}".format(cliente, salidaFarmacia)
+            client.publish(topic, payload, QOS, retain)
+            updateClient(cliente, result, farmacia)
+            time.sleep(4)
+
+        else:
+            payload = "El cliente {} está entrando a la farmacia {}".format(cliente, farmacia)
+            client.publish(topic, payload, QOS, retain)
+            updateClient(cliente, result, farmacia)
+            time.sleep(4)
 
 # Defino variables
 client = mqtt.Client("Cliente")
@@ -130,13 +167,12 @@ retain = True
 # Se obtiene y se imprime el mensaje
 while(exitFlag == False):
     time.sleep(3)
-    #camara: int = random.randint(0, 5)
-    camara = 0
+    camara: int = random.randint(0, 5)
     topic = "Farmatodo/Camara" + "/{}".format(camara)
-    farmacia:int = random.randint(1,3)
+    farmacia:int = random.randint(1,5)
     cliente: int = random.randint(1, 1000000)
     payload = "El Cliente {} ha entrado a la Farmacia {}".format(cliente, farmacia)
     client.publish(topic, payload, QOS, retain)
-    main(cliente, camara)     
+    main(cliente, camara, farmacia)     
     print("\n------------------------------------------")
   
