@@ -4,6 +4,9 @@ import random
 import datetime
 import psycopg2 as psy
 
+def createIdlp():
+    idpl = random.randint(1,100)
+    return idpl
 
 def createMacAddress():    
     macAddress  = random.randrange(100000000000,999999999999)
@@ -27,15 +30,13 @@ def createHall():
     return hall
 
 def createIdlocation():
-    idlocation = random.randint(1,50)
+    idlocation = random.randint(1,20)
     return idlocation
 
 def createAge():
     age = random.randint(1,100)
     return age
 
-def getID():
-    return id
 
 
 def createId():
@@ -83,8 +84,37 @@ def getClients(id, gender, age, macAddress):
             cursor.close()
             conn.close()
 
+
+def getLocationPerson(idlocation, idperson, idlp):
+    try:
+        conn = psy.connect(
+            user="postgres",
+            password="miravila1",
+            host='localhost',
+            port="5432",
+            database="FarmatodoInteligente"
+        )
+        
+        cursor = conn.cursor()
+        #query1 = "SELECT idperson FROM person WHERE idperson = {}".format(id)
+        #query2 = "SELECT idlocation FROM location WHERE idlocation = {}".format(idlocation)
+        query = "INSERT into locationperson (idlocation, idperson, idlp) VALUES ({},{},{})".format(
+            idlocation, idperson, idlp)
+        cursor.execute(query)
+        conn.commit()
+    except (Exception, psy.Error) as error:
+        print("Error", error)
+
+    finally:
+        if(conn):
+            cursor.close()
+            conn.close()
+
+        
+
+
 #Metodo para obtener locations/sedes
-def getLocations(hall,cashier, idlocation, idperson):
+def getLocations(hall,cashier, idlocation):
     try: #creo conexion con la BDD
         conn = psy.connect(
             user="postgres",
@@ -95,15 +125,11 @@ def getLocations(hall,cashier, idlocation, idperson):
         )
         cursor = conn.cursor()
         #Realizo el query
-        query = "SELECT idlocation FROM location WHERE idlocation = {}".format(idlocation)
+        query = "INSERT into location (hall, cashier, idlocation) VALUES ({},{},{})".format(
+            hall, cashier, idlocation)
         cursor.execute(query)
-        row = cursor.fetchone()
-
-        if(row is not None):
-            insert = "INSERT into location (hall, cashier, idlocation,idperson) VALUES ({},{},{}, {})".format(
-                hall, cashier, idlocation,id)
-            cursor.execute(insert, (hall, cashier, idlocation, id))
-            conn.commit()
+        conn.commit()
+           
     except (Exception, psy.Error) as error:
         print("Error", error)
 
@@ -117,16 +143,16 @@ def main(cliente, camara):
     #Sedes Existentes
     hall = createHall()
     cashier = createCashier()
-    
-    if(camara == 0):  # el cliente pasa por la puerta principal
-        gender = createGender()
-        age = createAge()
-        id = createId()
-        macAddress = createMacAddress()
-        getClients(cliente, gender, age, macAddress)
-    
+    idlp = createIdlp()
     idlocation = createIdlocation()
-    getLocations(hall, cashier, idlocation, id)
+    #el cliente pasa por la puerta principal
+    gender = createGender()
+    age = createAge()
+    id = createId()
+    macAddress = createMacAddress()
+    getClients(cliente, gender, age, macAddress)
+    getLocations(hall, cashier, idlocation)
+    getLocationPerson(idlocation,id,idlp)
 
 # Defino variables
 client = mqtt.Client("Cliente")
