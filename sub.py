@@ -4,10 +4,11 @@ import datetime
 
 client = mqtt.Client()
 broker = "localhost"
-topic = "Farmatodo/Camara/#"
+topic = "Farmatodo/Camara/#" #topico escogido
 QOS = 2
 date = datetime.datetime.now()
 
+#metodos generales de los subcriptotes 
 def on_connect(client, userdata, flags, rc):
     if(rc == 0):
         print("Se ha conectado al Cliente")
